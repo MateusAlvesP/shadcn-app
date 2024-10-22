@@ -30,13 +30,15 @@ export function App() {
   const [bibleVersions, setBibleVersions] = useState(["Loading..."]);
   const [bibleVersion, setBibleVersion] = useState("Loading...");
 
+  const [bibleId, setBibleId] = useState<any>("");
+
   const [books, setBooks] = useState<Book[]>([]);
   const [book, setBook] = useState("Loading...");
 
   const [chapters, setChapters] = useState<Chapter[]>([]);
   const [chapter, setChapter] = useState("Loading...");
 
-  const [chapterText, setChapterText] = useState<any>({});
+  const [chapterText, setChapterText] = useState<any>("");
 
 
   useEffect(() => {
@@ -67,6 +69,13 @@ export function App() {
 
   useEffect(() => {
 
+    setBibleVersion("Loading...")
+    setBibleVersions(["Loading..."])
+    setBook("Loading...")
+    setBooks([])
+    setChapter("Loading...")
+    setChapters([])
+
     const languageId = languageObjects.find((l: Language) => l.nameLocal == language)?.id
     const biblesFiltered = bibles.filter(b => b.language.id == languageId)
     const bibleVersions = biblesFiltered.map((b: Bible) => b.name)
@@ -77,8 +86,15 @@ export function App() {
   }, [language])
 
   useEffect(() => {
+    setBook("Loading...")
+    setBooks([])
+    setChapter("Loading...")
+    setChapters([])
+
     const bible = bibles.find((b: Bible) => b.name == bibleVersion)
     const bibleId = bible?.id;
+
+    setBibleId(bibleId)
 
     if(bibleId) {
 
@@ -104,8 +120,9 @@ export function App() {
 
   useEffect(() => {
 
-    const bible = bibles.find((b: Bible) => b.name == bibleVersion)
-    const bibleId = bible?.id;
+    setChapter("Loading...")
+    setChapters([])
+    
     const bookId = books.find((b: Book) => b.name == book)?.id
 
     if(bibleId && bookId) {
@@ -132,15 +149,13 @@ export function App() {
 
   useEffect(() => {
 
-    const bible = bibles.find((b: Bible) => b.name == bibleVersion)
-    const bibleId = bible?.id;
     const chapterId = chapters.find((c: Chapter) => c.number == chapter)?.id
 
     if(bibleId && chapterId) {
 
       const fetchData = async () => {
 
-        const data = await fetch(`https://api.scripture.api.bible/v1/bibles/${bibleId}/chapters/${chapterId}`, {
+        const data = await fetch(`https://api.scripture.api.bible/v1/bibles/${bibleId}/chapters/${chapterId}?content-type=json`, {
           method: 'GET',
           headers: {
             'accept': 'application/json',
@@ -148,8 +163,18 @@ export function App() {
           }
         });
         const json = await data.json()
-        console.log(json, json.data)
-        setChapterText(json.data)
+        
+        const versiclesJsonArray = json.data.content;
+
+        //console.log(versiclesJsonArray)
+
+        const versiclesArray = versiclesJsonArray.map((v: any) => v.items)
+
+        const versiclesObj = [].concat(...versiclesArray)
+
+        console.log(versiclesObj)
+
+        //setChapterText(content)
       }
 
       fetchData()
@@ -244,7 +269,8 @@ export function App() {
 
       <div className="border rounded-lg p-2">
         
-        { <div dangerouslySetInnerHTML={{ __html: chapterText.content }} /> }
+        {/* {chapterText} */}
+
 
       </div>
     </div>
